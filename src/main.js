@@ -3,6 +3,7 @@ import * as THREE from 'three'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
  
 
+ 
 console.log(GLTFLoader)
 
 // Canvas 
@@ -36,7 +37,7 @@ gltfLoader.load(
 
 // Add a simple cube
 const geometry = new THREE.BoxGeometry();
-const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+const material = new THREE.MeshBasicMaterial({ color: "white" });
 const cube = new THREE.Mesh(geometry, material);
 scene.add(cube);
 
