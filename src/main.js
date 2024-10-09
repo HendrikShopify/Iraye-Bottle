@@ -36,7 +36,7 @@ const loader = new GLTFLoader();
 let mixer; // This will be used for animations
 
 loader.load(
-  './static/bottle.glb', // Path to your GLTF model file
+  'https://cdn.shopify.com/3d/models/0088233122eabedd/bottle.glb', // Path to your GLTF model file
   (gltf) => {
     scene.add(gltf.scene);
     console.log(gltf.scene);
