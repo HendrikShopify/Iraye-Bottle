@@ -25,7 +25,7 @@ const texture = hdriLoader.load([
 ]);
 
 scene.environment = texture;
-scene.background = new THREE.Color('#F1EFE8');
+scene.background = new THREE.Color('#F1EFE800');
 
 fallbackCamera.aspect = window.innerWidth / window.innerHeight;
 fallbackCamera.updateProjectionMatrix();
