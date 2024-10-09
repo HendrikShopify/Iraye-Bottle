@@ -36,7 +36,7 @@ const loader = new GLTFLoader();
 let mixer;
 
 loader.load(
-  './static/scene.glb',
+  'https://cdn.shopify.com/3d/models/0088233122eabedd/bottle.glb',
   (gltf) => {
     scene.add(gltf.scene);
     gltf.scene.position.set(0, 0, 0);
