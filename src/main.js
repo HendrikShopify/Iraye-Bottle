@@ -91,6 +91,8 @@ window.addEventListener('resize', () => {
   }
 });
 
+const clock = new THREE.Clock(); // Used for controlling animation timing
+
 // Animation loop
 function animate() {
   requestAnimationFrame(animate);
@@ -104,5 +106,3 @@ function animate() {
 
   renderer.render(scene, camera || fallbackCamera); // Render with the correct camera
 }
-
-const clock = new THREE.Clock(); // Used for controlling animation timing
