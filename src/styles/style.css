@@ -1,0 +1,15 @@
+
+
+body {
+    background-color: #F1EFE8;
+    font-family: 'Roboto', sans-serif;
+    margin: 0;
+    padding: 0;
+}
+
+canvas {
+    display: block;
+    margin: 0 auto;
+    width: 100vw;
+    height: 100vh;
+}
