@@ -2,17 +2,173 @@ import './styles/style.css';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { GUI } from 'lil-gui';
+import gsap from 'gsap';
 
-const canvas = document.querySelector('canvas');
 
-const scene = new THREE.Scene();
-scene.background = null;
+// renderer.setPixelRatio(window.devicePixelRatio);
 
-let camera;
-const fallbackCamera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
-renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.setPixelRatio(window.devicePixelRatio);
+let bottleGroup = null;
+const pivot = new THREE.Group();
+const loader = new GLTFLoader();
+
+const scene = new THREE.Scene()
+
+scene.add(pivot); // Add the pivot to the scene
+
+// Load the bottle
+loader.load(
+  'https://cdn.shopify.com/3d/models/4a7f029ca57ad73c/solo-bottle.glb',
+  (gltf) => {
+    console.log(gltf.scene);
+
+    bottleGroup = new THREE.Group();
+    bottleGroup.name = 'bottle'; 
+    
+    const children = [...gltf.scene.children];
+
+    for (const child of children) {
+      child.scale.set(1, 1, 1);
+      child.rotation.set(1.570796461153735, 0, Math.PI * .5);
+      bottleGroup.add(child);
+    }
+
+    // Adjust the bottleGroup position to set its origin
+    const box = new THREE.Box3().setFromObject(bottleGroup);
+    const center = box.getCenter(new THREE.Vector3());
+
+    bottleGroup.position.set(-center.x, -center.y, -center.z); // Offset the bottleGroup so it rotates around its center
+
+    // Add the bottleGroup to the pivot, instead of directly to the scene
+    pivot.add(bottleGroup);
+    pivot.position.set(0, 1, 0); // Set the pivot position to the center of the scene
+
+    // Start the animation or rendering loop
+    tick();
+  },
+  (xhr) => {
+    // Optional: track progress here
+  },
+  (error) => {
+    console.error('An error happened while loading the GLTF model:', error);
+  }
+);
+
+
+
+/////////////////////////////////////
+
+const lineMetrics = {
+    opacity: 0.75,
+}
+
+
+// LINES
+
+// Function to create a line with its own dots
+function createWavyLine(scene, lineIndex) {
+  const material = new THREE.LineBasicMaterial({ color: 'white',
+    transparent: true, 
+    opacity: lineMetrics.opacity      
+});
+
+  // Define points for the wavy line
+  let points = [];
+  const amplitude = 1.25;
+  const frequency = 2;
+  const segments = 100;
+  const geometry = new THREE.BufferGeometry();
+  const line = new THREE.Line(geometry, material);
+
+  // Randomly position the line in the scene
+  const randomX = Math.random() < 0.5 
+  ? Math.random() * 10 + 5    
+  : -(Math.random() * 10 + 5); 
+  
+  const randomY = (Math.random() - 0.5) * 6;
+  const randomZ = (Math.random() - 0.5) * 5;
+  
+  line.position.set(randomX, randomY, randomZ);
+  
+  
+
+  scene.add(line);
+
+  // Create spheres for dots
+  const dotGeometry = new THREE.SphereGeometry(0.05, 8, 8);
+  const dotMaterial = new THREE.MeshBasicMaterial({ color: 'white',
+    transparent: true, 
+    opacity: lineMetrics.opacity });
+  const dots = [];
+
+  // Create 5 dots and position them along the line initially
+  for (let i = 0; i < 7; i++) {
+    const dot = new THREE.Mesh(dotGeometry, dotMaterial);
+    scene.add(dot);
+    dots.push(dot);
+  }
+
+  // Function to update the points for the wave
+  function updateWave(time) {
+    points = [];  // Clear points array
+
+    for (let i = 0; i <= segments; i++) {
+      const t = i / segments;  // Normalized value between 0 and 1
+      const x = -1 + t * 2;    // Linear interpolation between -1 and 1 (X-axis)
+      const z = -25 + t * 50;  // Linear interpolation between -25 and 25 (Z-axis)
+      const y = Math.sin(t * frequency * Math.PI * 2 + time + lineIndex) * amplitude;  // Animate wave with time
+      points.push(new THREE.Vector3(x, y, z));  // Add points to create a wavy pattern
+    }
+
+    geometry.setFromPoints(points);  // Update the geometry with the new points
+
+    // Update the position of the dots to move with the wave
+    for (let i = 0; i < dots.length; i++) {
+      const t = (i + 1) / (dots.length + 1);  // Distribute dots evenly along the line
+      const x = -1 + t * 2;    // Same linear interpolation for X
+      const z = -25 + t * 50;  // Same linear interpolation for Z
+      const y = Math.sin(t * frequency * Math.PI * 2 + time + lineIndex) * amplitude;  // Sine wave for Y
+
+      dots[i].position.set(x + randomX, y + randomY, z + randomZ);  // Update the dot's position
+    }
+  }
+
+  return updateWave;
+}
+
+// Create multiple lines and store their update functions
+const numLines = 6;
+const updateFunctions = [];
+
+for (let i = 0; i < numLines; i++) {
+  const updateWave = createWavyLine(scene, i);
+  updateFunctions.push(updateWave);
+}
+
+// GSAP Animation
+let waveTime = { value: 0 };
+
+gsap.to(waveTime, {
+  value: Math.PI * 2,  // Complete one full wave cycle
+  duration: 15,        // Control the speed of the wave (10 seconds for a slow wave)
+  repeat: -1,          // Repeat indefinitely
+  ease: "none",        // Keep a constant speed
+  onUpdate: () => {
+    updateFunctions.forEach(update => update(waveTime.value));  // Update all lines and dots
+  }
+});
+
+/**
+ * Base
+ */
+// Debug
+// const gui = new GUI()
+
+// Canvas
+const canvas = document.querySelector('canvas.webgl')
+
+// Scene
+
 
 const hdriLoader = new THREE.CubeTextureLoader();
 const texture = hdriLoader.load([
@@ -25,68 +181,141 @@ const texture = hdriLoader.load([
 ]);
 
 scene.environment = texture;
-scene.background = new THREE.Color('#F1EFE800');
+scene.environmentIntensity = 1.05;
+scene.background = new THREE.Color('#F1EFE8');
 
-fallbackCamera.aspect = window.innerWidth / window.innerHeight;
-fallbackCamera.updateProjectionMatrix();
+/**
+ * Lights
+ */
 
-let controls = new OrbitControls(fallbackCamera, renderer.domElement);
+const ambientLight = new THREE.AmbientLight(0xffffff, 1.05); // Soft ambient light
+scene.add(ambientLight);
 
-const loader = new GLTFLoader();
-let mixer;
+const directionalLight = new THREE.DirectionalLight(0xffffff, 1.2); // Sunlight
+directionalLight.position.set(-3, 1, 1);
+scene.add(directionalLight);
 
-loader.load(
-  'https://cdn.shopify.com/3d/models/d7e652c863cf96be/scene.glb',
-  (gltf) => {
-    scene.add(gltf.scene);
-    gltf.scene.position.set(0, 0, 0);
+const backLight = new THREE.DirectionalLight(0xffffff, 1.5); // Backlight
+backLight.position.set(3, 2, -10);
+scene.add(backLight);
 
-    if (gltf.cameras && gltf.cameras.length > 0) {
-      camera = gltf.cameras[0];
-      camera.aspect = window.innerWidth / window.innerHeight;
-      camera.updateProjectionMatrix();
-    } else {
-      camera = fallbackCamera;
-    }
 
-    controls = new OrbitControls(camera, renderer.domElement);
+/**
+ *
+ * Sizes
+ */
+const sizes = {
+    width: window.innerWidth,
+    height: window.innerHeight
+}
 
-    if (gltf.animations && gltf.animations.length > 0) {
-      mixer = new THREE.AnimationMixer(gltf.scene);
-      gltf.animations.forEach((clip) => {
-        const action = mixer.clipAction(clip);
-        action.play();
-      });
-    }
+window.addEventListener('resize', () =>
+{
+    // Update sizes
+    sizes.width = window.innerWidth
+    sizes.height = window.innerHeight
 
-    animate();
-  },
-  (xhr) => {},
-  (error) => {
-    console.error('An error happened while loading the GLTF model:', error);
-  }
-);
+    // Update camera
+    camera.aspect = sizes.width / sizes.height
+    camera.updateProjectionMatrix()
 
-fallbackCamera.position.z = 5;
+    // Update renderer
+    renderer.setSize(sizes.width, sizes.height)
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+})
 
-window.addEventListener('resize', () => {
-  renderer.setSize(window.innerWidth, window.innerHeight);
-  if (camera) {
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-  }
+/**
+ * Camera
+ */
+// Base camera
+const camera = new THREE.PerspectiveCamera(25, sizes.width / sizes.height, 0.1, 100)
+camera.position.set(-35, 0, )
+scene.add(camera)
+
+
+
+
+
+
+// Controls
+const controls = new OrbitControls(camera, canvas)
+controls.target.set(0, 0.75, 0)
+controls.enableDamping = true
+
+controls.enabled = false;
+
+
+/**
+ * Renderer
+ */
+const renderer = new THREE.WebGLRenderer({
+    canvas: canvas,
+    antialias: true,
+    alpha: true,
+})
+
+renderer.setClearColor( 0x000000, 0 ); // the default
+renderer.setSize(sizes.width, sizes.height)
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+
+
+/**
+ * Animate
+ */
+const clock = new THREE.Clock()
+let previousTime = 0
+
+const tick = () =>
+{
+    const elapsedTime = clock.getElapsedTime()
+    const deltaTime = elapsedTime - previousTime
+    previousTime = elapsedTime
+
+    // Update controls
+    controls.update()
+
+    // Render
+    renderer.render(scene, camera)
+
+    // Call tick again on the next frame
+    window.requestAnimationFrame(tick)
+}
+
+
+
+
+// GSAP
+
+window.addEventListener('mousemove', (event) => {
+    // Get normalized mouse coordinates (-1 to 1)
+    const xRotation = (event.clientX / window.innerWidth) * 2 - 1;
+    const yRotation = (event.clientY / window.innerHeight) * 2 - 1;
+
+    // Animate the rotation of the pivot point (which contains the bottleGroup)
+    gsap.to(pivot.rotation, {
+        x: xRotation * -0.05, // Rotate along the X-axis (up and down)
+        y: xRotation * 0.5,   // Rotate along the Y-axis (left and right)
+        z: yRotation * 0.05,  // Rotate along the Z-axis
+        duration: 1.5,        // Smooth transition
+        ease: 'power2.out',
+    });
 });
 
-const clock = new THREE.Clock();
+// Mousemove effect to move backLight
+window.addEventListener('mousemove', (event) => {
+    // Get normalized mouse coordinates (-1 to 1)
+    const xMouse = (event.clientX / window.innerWidth) * 2 - 1;
+    const yMouse = (event.clientY / window.innerHeight) * 2 - 1;
 
-function animate() {
-  requestAnimationFrame(animate);
-  controls.update();
+    // Animate the movement of the backLight based on mouse position
+    gsap.to(backLight.position, {
+        x: 0 + xMouse * 5,  // Move horizontally based on mouse position
+        y: 0 + yMouse * 3,  // Move vertically based on mouse position
+        z: -5 + yMouse * 2, // Move along the z-axis slightly
+        duration: 1.2,       // Smooth transition
+        ease: 'power2.out',
+    });
+});
 
-  if (mixer) {
-    const delta = clock.getDelta();
-    mixer.update(delta);
-  }
 
-  renderer.render(scene, camera || fallbackCamera);
-}
+document.querySelector("body").style.backgroundColor = "#f1efe8";
