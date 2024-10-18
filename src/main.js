@@ -313,6 +313,7 @@ window.addEventListener('mousemove', (event) => {
 function createBottleBalerina() {
 
   const bottleSection = document.querySelector('.section_f-product');
+  console.log(bottleSection);
 
   let spinAnimation = gsap.timeline({ scrollTrigger: {
     trigger: bottleSection,
