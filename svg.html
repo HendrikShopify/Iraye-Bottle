@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SVG Wavy Line Animation</title>
+  <style>
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      background-color: #F1EFE8;
+      overflow: hidden;
+    }
+    svg {
+      width: 100vw;
+      height: 100vh;
+    }
+    .line {
+      fill: none;
+      stroke: white;
+      stroke-width: 2;
+      opacity: 0.6;
+    }
+    .dot {
+      fill: white;
+      opacity: 0.6;
+    }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.5/gsap.min.js"></script>
+</head>
+<body>
+  <svg id="wavy-line-svg"></svg>
+  <script>
+    const svg = document.getElementById('wavy-line-svg');
+    const numLines = 6;
+    const lineSpacing = 120;
+    const numDots = 7;
+    const amplitude = 40;
+    const frequency = 2;
+    const segments = 100;
+
+    function createWavyLine(lineIndex) {
+      const line = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      line.setAttribute('class', 'line');
+      svg.appendChild(line);
+
+      // Create random start position for each line
+      const randomXOffset = Math.random() * 200 - 100;
+      const randomYOffset = lineIndex * lineSpacing + Math.random() * 200 - 100;
+
+      // Create dots for each line
+      const dots = [];
+      for (let i = 0; i < numDots; i++) {
+        const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        dot.setAttribute('class', 'dot');
+        dot.setAttribute('r', 4);
+        svg.appendChild(dot);
+        dots.push(dot);
+      }
+
+      function updateWave(time) {
+        const points = [];
+        for (let i = 0; i <= segments; i++) {
+          const t = i / segments;
+          const x = -200 + t * 2400 + randomXOffset;  // X-axis with random offset
+          const y = 300 + Math.sin(t * frequency * Math.PI * 2 + time + lineIndex) * amplitude + randomYOffset; // Y-axis with random offset
+          points.push(`${x},${y}`);
+        }
+        line.setAttribute('d', `M${points.join(' L')}`);
+
+        // Update dots
+        for (let i = 0; i < dots.length; i++) {
+          const t = (i + 1) / (numDots + 1);
+          const x = -200 + t * 2400 + randomXOffset;
+          const y = 300 + Math.sin(t * frequency * Math.PI * 2 + time + lineIndex) * amplitude + randomYOffset;
+          dots[i].setAttribute('cx', x);
+          dots[i].setAttribute('cy', y);
+        }
+      }
+
+      return updateWave;
+    }
+
+    const updateFunctions = [];
+    for (let i = 0; i < numLines; i++) {
+      const updateWave = createWavyLine(i);
+      updateFunctions.push(updateWave);
+    }
+
+    gsap.to({ time: 0 }, {
+      time: Math.PI * 2,
+      duration: 15,
+      repeat: -1,
+      ease: "none",
+      onUpdate: function () {
+        updateFunctions.forEach(update => update(this.targets()[0].time));
+      }
+    });
+  </script>
+</body>
+</html>

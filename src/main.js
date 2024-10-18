@@ -67,74 +67,62 @@ const lineMetrics = {
 
 // Function to create a line with its own dots
 function createWavyLine(scene, lineIndex) {
-  const material = new THREE.LineBasicMaterial({ color: 'white',
-    transparent: true, 
-    opacity: lineMetrics.opacity      
-});
-
-  // Define points for the wavy line
-  let points = [];
-  const amplitude = 1.25;
-  const frequency = 2;
-  const segments = 100;
-  const geometry = new THREE.BufferGeometry();
-  const line = new THREE.Line(geometry, material);
-
-  // Randomly position the line in the scene
-  const randomX = Math.random() < 0.5 
-  ? Math.random() * 10 + 5    
-  : -(Math.random() * 10 + 5); 
+    const material = new THREE.LineBasicMaterial({ color: 'white',
+      transparent: true, 
+      opacity: lineMetrics.opacity      
+    });
   
-  const randomY = (Math.random() - 0.5) * 6;
-  const randomZ = (Math.random() - 0.5) * 5;
+    let points = [];
+    const amplitude = 1.25;
+    const frequency = 2;
+    const segments = 100;
+    const geometry = new THREE.BufferGeometry();
+    const line = new THREE.Line(geometry, material);
   
-  line.position.set(randomX, randomY, randomZ);
+    // Randomize line position
+    const randomX = Math.random() < 0.5 ? Math.random() * 10 + 5 : -(Math.random() * 10 + 5);
+    const randomY = (Math.random() - 0.5) * 6;
+    const randomZ = (Math.random() - 0.5) * 5;
   
+    line.position.set(randomX, randomY, randomZ);
+    scene.add(line);
   
-
-  scene.add(line);
-
-  // Create spheres for dots
-  const dotGeometry = new THREE.SphereGeometry(0.05, 8, 8);
-  const dotMaterial = new THREE.MeshBasicMaterial({ color: 'white',
-    transparent: true, 
-    opacity: lineMetrics.opacity });
-  const dots = [];
-
-  // Create 5 dots and position them along the line initially
-  for (let i = 0; i < 7; i++) {
-    const dot = new THREE.Mesh(dotGeometry, dotMaterial);
-    scene.add(dot);
-    dots.push(dot);
-  }
-
-  // Function to update the points for the wave
-  function updateWave(time) {
-    points = [];  // Clear points array
-
-    for (let i = 0; i <= segments; i++) {
-      const t = i / segments;  // Normalized value between 0 and 1
-      const x = -1 + t * 2;    // Linear interpolation between -1 and 1 (X-axis)
-      const z = -25 + t * 50;  // Linear interpolation between -25 and 25 (Z-axis)
-      const y = Math.sin(t * frequency * Math.PI * 2 + time + lineIndex) * amplitude;  // Animate wave with time
-      points.push(new THREE.Vector3(x, y, z));  // Add points to create a wavy pattern
+    // Create dots
+    const dotGeometry = new THREE.SphereGeometry(0.05, 8, 8);
+    const dotMaterial = new THREE.MeshBasicMaterial({ color: 'white', transparent: true, opacity: lineMetrics.opacity });
+    const dots = [];
+  
+    for (let i = 0; i < 7; i++) {
+      const dot = new THREE.Mesh(dotGeometry, dotMaterial);
+      scene.add(dot);
+      dots.push(dot);
     }
-
-    geometry.setFromPoints(points);  // Update the geometry with the new points
-
-    // Update the position of the dots to move with the wave
-    for (let i = 0; i < dots.length; i++) {
-      const t = (i + 1) / (dots.length + 1);  // Distribute dots evenly along the line
-      const x = -1 + t * 2;    // Same linear interpolation for X
-      const z = -25 + t * 50;  // Same linear interpolation for Z
-      const y = Math.sin(t * frequency * Math.PI * 2 + time + lineIndex) * amplitude;  // Sine wave for Y
-
-      dots[i].position.set(x + randomX, y + randomY, z + randomZ);  // Update the dot's position
+  
+    function updateWave(time) {
+      points = [];
+      for (let i = 0; i <= segments; i++) {
+        const t = i / segments;
+        const x = -1 + t * 2;
+        const z = -25 + t * 50;
+        const y = Math.sin(t * frequency * Math.PI * 2 + time + lineIndex) * amplitude;
+        points.push(new THREE.Vector3(x, y, z));
+      }
+      geometry.setFromPoints(points);
+  
+      // Update dots
+      for (let i = 0; i < dots.length; i++) {
+        const t = (i + 1) / (dots.length + 1);
+        const x = -1 + t * 2;
+        const z = -25 + t * 50;
+        const y = Math.sin(t * frequency * Math.PI * 2 + time + lineIndex) * amplitude;
+  
+        dots[i].position.set(x + randomX, y + randomY, z + randomZ);
+      }
     }
+  
+    return updateWave;
   }
-
-  return updateWave;
-}
+  
 
 // Create multiple lines and store their update functions
 const numLines = 6;
@@ -161,14 +149,13 @@ gsap.to(waveTime, {
 /**
  * Base
  */
-// Debug
-// const gui = new GUI()
+
+const gui = new GUI()
 
 // Canvas
 const canvas = document.querySelector('canvas.webgl')
 
 // Scene
-
 
 const hdriLoader = new THREE.CubeTextureLoader();
 const texture = hdriLoader.load([
@@ -318,4 +305,3 @@ window.addEventListener('mousemove', (event) => {
 });
 
 
-document.querySelector("body").style.backgroundColor = "#f1efe8";
