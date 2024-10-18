@@ -312,7 +312,13 @@ window.addEventListener('mousemove', (event) => {
 
 function createBottleBalerina() {
 
-  let spinAnimation = gsap.timeline({ paused: true }); // repeat: -1 for infinite spin
+  const bottleSection = document.querySelector('.section_f-product');
+
+  let spinAnimation = gsap.timeline({ scrollTrigger: {
+    trigger: bottleSection,
+    start: 'top top',
+    toggleActions: 'play none none none',
+  } }); 
 
   console.log(bottleGroup);
 
@@ -350,12 +356,5 @@ function createBottleBalerina() {
     }, 
     0
   )
-
-  // Listen for the 'S' key press to trigger the animation
-  window.addEventListener('keydown', (event) => {
-    if (event.key === 's' || event.key === 'S') {
-      spinAnimation.restart(); // Play the animation on "S" key press
-    }
-  });
 }
 
