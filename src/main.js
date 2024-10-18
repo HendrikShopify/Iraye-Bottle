@@ -13,8 +13,10 @@ const pivot = new THREE.Group();
 const loader = new GLTFLoader();
 
 const scene = new THREE.Scene()
-
 scene.add(pivot); // Add the pivot to the scene
+
+
+
 
 // Load the bottle
 loader.load(
@@ -31,6 +33,7 @@ loader.load(
       child.scale.set(1, 1, 1);
       child.rotation.set(1.570796461153735, 0, Math.PI * .5);
       bottleGroup.add(child);
+
     }
 
     // Adjust the bottleGroup position to set its origin
@@ -39,9 +42,15 @@ loader.load(
 
     bottleGroup.position.set(-center.x, -center.y, -center.z); // Offset the bottleGroup so it rotates around its center
 
+    let newScale = 0.9
+
+    bottleGroup.scale.set(newScale, newScale, newScale); // Scale the bottleGroup down
+
     // Add the bottleGroup to the pivot, instead of directly to the scene
     pivot.add(bottleGroup);
     pivot.position.set(0, 1, 0); // Set the pivot position to the center of the scene
+
+    createBottleBalerina()
 
     // Start the animation or rendering loop
     tick();
@@ -61,7 +70,6 @@ loader.load(
 const lineMetrics = {
     opacity: 0.75,
 }
-
 
 // LINES
 
@@ -304,4 +312,53 @@ window.addEventListener('mousemove', (event) => {
     });
 });
 
+
+function createBottleBalerina() {
+
+  let spinAnimation = gsap.timeline({ paused: true }); // repeat: -1 for infinite spin
+
+  console.log(bottleGroup);
+
+  const spinValues = {
+    ease: 'expo.out',
+    rotationDuration: 2,
+    positionDuration: 1.25,
+    scaleDuration: 1.25,
+    scaleValue: 0,
+  };
+
+  // Animation sequence
+  spinAnimation.from(
+    bottleGroup.scale,
+    {
+      x: spinValues.scaleValue,
+      y: spinValues.scaleValue,
+      z: spinValues.scaleValue,
+      duration: spinValues.scaleDuration,
+      ease: spinValues.ease
+    }
+  ).from(bottleGroup.position, 
+    { 
+      y: 0,
+      duration: spinValues.positionDuration,
+      ease: spinValues.ease
+    }, "<"
+  ).fromTo(bottleGroup.rotation, 
+    { y: 0, x: -1, }, 
+    { 
+      y: Math.PI * 2, // Full spin on the y-axis
+      x: 0, // Reset x-axis rotation
+      duration: spinValues.rotationDuration, 
+      ease: spinValues.ease 
+    }, 
+    0
+  )
+
+  // Listen for the 'S' key press to trigger the animation
+  window.addEventListener('keydown', (event) => {
+    if (event.key === 's' || event.key === 'S') {
+      spinAnimation.restart(); // Play the animation on "S" key press
+    }
+  });
+}
 
