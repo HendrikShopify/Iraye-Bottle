@@ -158,7 +158,7 @@ gsap.to(waveTime, {
  * Base
  */
 
-const gui = new GUI()
+// const gui = new GUI()
 
 // Canvas
 const canvas = document.querySelector('canvas.webgl')
@@ -318,9 +318,8 @@ function createBottleBalerina() {
     trigger: bottleSection,
     start: 'top top',
     toggleActions: 'play none none none',
+    markers: true,
   } }); 
-
-  console.log(bottleGroup);
 
   const spinValues = {
     ease: 'expo.out',
