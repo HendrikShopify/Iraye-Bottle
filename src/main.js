@@ -276,9 +276,6 @@ const tick = () =>
     window.requestAnimationFrame(tick)
 }
 
-
-
-
 // GSAP
 
 window.addEventListener('mousemove', (event) => {
