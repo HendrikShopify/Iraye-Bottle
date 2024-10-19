@@ -15,9 +15,6 @@ const loader = new GLTFLoader();
 const scene = new THREE.Scene()
 scene.add(pivot); // Add the pivot to the scene
 
-
-
-
 // Load the bottle
 loader.load(
   'https://cdn.shopify.com/3d/models/4a7f029ca57ad73c/solo-bottle.glb',
@@ -309,18 +306,22 @@ window.addEventListener('mousemove', (event) => {
     });
 });
 
+gsap.registerPlugin(ScrollTrigger);
+
 
 function createBottleBalerina() {
 
   const bottleSection = document.querySelector('.section_f-product');
-  console.log(bottleSection);
-
-  let spinAnimation = gsap.timeline({ scrollTrigger: {
-    trigger: bottleSection,
-    start: 'top top',
-    toggleActions: 'play none none none',
-    markers: true,
-  } }); 
+  
+  let spinAnimation = gsap.timeline({
+    scrollTrigger: {
+      trigger: bottleSection,
+      start: 'top top',         
+      scrub: false,             
+      markers: false,           
+      
+    }
+  });
 
   const spinValues = {
     ease: 'expo.out',
@@ -358,3 +359,35 @@ function createBottleBalerina() {
   )
 }
 
+// Create the particle system
+function createParticles(scene) {
+  const particleCount = 2000; // Increase the number of particles
+  const geometry = new THREE.BufferGeometry();
+  const positions = new Float32Array(particleCount * 3); // 3 values per particle (x, y, z)
+
+  // Fill the position buffer with random values, within a smaller range to ensure they stay close
+  for (let i = 0; i < particleCount * 3; i++) {
+    positions[i] = (Math.random() - 0.5) * 50; // Random positions within a smaller cube of size 50
+  }
+
+  // Set the geometry's attributes
+  geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+
+  // Create a PointsMaterial for the particles, with a round texture
+  const material = new THREE.PointsMaterial({
+    color: 0xffffff,      // White color
+    size: 0.3,            // Adjust size to make particles more visible
+    transparent: true,
+    opacity: 0.9,
+    sizeAttenuation: true, // Make particles round and adjust size with perspective
+    map: new THREE.TextureLoader().load('https://threejsfundamentals.org/threejs/resources/images/disc.png'),
+    alphaTest: 0.5        // Prevent blending issues
+  });
+
+  // Create the particle system and add it to the scene
+  const particles = new THREE.Points(geometry, material);
+  scene.add(particles);
+}
+
+// Call the particle creation function
+createParticles(scene);
