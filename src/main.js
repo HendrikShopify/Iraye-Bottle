@@ -8,6 +8,21 @@ import gsap from 'gsap';
 
 // renderer.setPixelRatio(window.devicePixelRatio);
 
+let isInnited = false;
+
+
+
+// Initial check
+runOnLargeScreens();
+
+// Check on window resize
+window.addEventListener('resize', runOnLargeScreens);
+
+function runOnLargeScreens() {
+  if (!isInnited && window.innerWidth > 479) {
+    
+
+
 let bottleGroup = null;
 const pivot = new THREE.Group();
 const loader = new GLTFLoader();
@@ -174,8 +189,8 @@ const texture = hdriLoader.load([
 
 scene.environment = texture;
 scene.environmentIntensity = 1.05;
+// scene.background = null;
 scene.background = new THREE.Color('#F1EFE8');
-
 /**
  * Lights
  */
@@ -227,15 +242,12 @@ scene.add(camera)
 
 
 
-
-
 // Controls
 const controls = new OrbitControls(camera, canvas)
 controls.target.set(0, 0.75, 0)
 controls.enableDamping = true
 
 controls.enabled = false;
-
 
 /**
  * Renderer
@@ -391,3 +403,8 @@ function createParticles(scene) {
 
 // Call the particle creation function
 createParticles(scene);
+
+    // Your code here
+    isInnited = true;
+  }
+}
