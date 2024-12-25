@@ -328,7 +328,7 @@ function createBottleBalerina() {
   let spinAnimation = gsap.timeline({
     scrollTrigger: {
       trigger: bottleSection,
-      start: 'top 75%',         
+      start: 'top 25%',         
       scrub: false,             
       markers: false,           
       
